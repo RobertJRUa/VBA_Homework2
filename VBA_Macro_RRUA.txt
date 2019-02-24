@@ -1,0 +1,194 @@
+Attribute VB_Name = "Module1"
+
+'------------
+'INSTRUCTIONS
+'------------
+'Create a script that will loop through all the stocks and take the following info:
+
+    'Yearly change from what the stock opened the year at to what the closing price was.
+    'The percent change from the what it opened the year at to what it closed.
+    'The total Volume of the stock
+    'Ticker symbol
+
+'You should also have conditional formatting that will highlight positive change in green and negative change in red.
+
+'Your solution will also be able to locate the stock with:
+
+    '"Greatest % increase"
+    '"Greatest % Decrease"
+    '"Greatest total volume"
+
+Sub StockVolume()
+
+'We need to loop through multiple worksheets, so the first thing we want to do is declare our worksheet variable
+
+    Dim WS As Worksheet
+
+'Now we need to create a loop for each worksheet
+'We learned this For Each code in the Wells Fargo exercise
+
+    For Each WS In ActiveWorkbook.Worksheets
+    WS.Activate
+    
+' We need to tell Excel to determine the last row b/c each worksheet has a different # of rows
+
+    LastRow = WS.Cells(Rows.Count, 1).End(xlUp).Row
+
+' Now we need to create some new column headers for our summary data
+
+        Cells(1, "I").Value = "Ticker"
+        Cells(1, "J").Value = "Yearly Change"
+        Cells(1, "K").Value = "Percent Change"
+        Cells(1, "L").Value = "Total Stock Volume"
+        
+'We need to declare our variables!
+'Opening and closing price, and yearly change will be numbers (but not whole numbers) so we'll dim As Double
+
+        Dim Opening_Price As Double
+        Dim Closing_Price As Double
+        Dim Yearly_Change As Double
+        
+'The ticker name will be text so we dim As String
+
+        Dim Ticker_Name As String
+        
+'Percent change and volume will be numbers, so dim As Double
+
+        Dim Percent_Change As Double
+        Dim Volume As Double
+        Volume = 0
+        Dim Row As Double
+        Row = 2
+        Dim Column As Integer
+        Column = 1
+        Dim i As Long
+        
+'Set the openin price
+        Opening_Price = Cells(2, Column + 2).Value
+          
+' Loop through all ticker symbol
+        
+        For i = 2 To LastRow
+         
+'We need to tell Excel to check the ticker symbol column and then do something ...
+
+        If Cells(i + 1, Column).Value <> Cells(i, Column).Value Then
+          
+ ' Set ticker name
+ 
+        Ticker_Name = Cells(i, Column).Value
+        Cells(Row, Column + 8).Value = Ticker_Name
+        
+' Set the closing price
+
+        Close_Price = Cells(i, Column + 5).Value
+
+' Add the yearly change
+
+        Yearly_Change = Close_Price - Open_Price
+        Cells(Row, Column + 9).Value = Yearly_Change
+                
+' Add percent change
+
+        If (Open_Price = 0 And Close_Price = 0) Then
+        Percent_Change = 0
+        
+        ElseIf (Open_Price = 0 And Close_Price <> 0) Then
+        Percent_Change = 1
+        
+        Else
+        Percent_Change = Yearly_Change / Open_Price
+        Cells(Row, Column + 10).Value = Percent_Change
+        Cells(Row, Column + 10).NumberFormat = "0.00%"
+                
+        End If
+                
+' Add the total volume
+
+        Volume = Volume + Cells(i, Column + 6).Value
+        Cells(Row, Column + 11).Value = Volume
+        
+' Add one to the summary table row
+
+        Row = Row + 1
+         
+ ' Now, reset the open price
+ 
+        Open_Price = Cells(i + 1, Column + 2)
+                
+' Now reset the volumen total to zero
+
+            Volume = 0
+            
+'Now if the cells have the same ticker symbol
+
+            Else
+            Volume = Volume + Cells(i, Column + 6).Value
+            
+            End If
+            
+            Next i
+          
+ ' Determine the last row of yearly change for each worksheet
+ 
+        YCLastRow = WS.Cells(Rows.Count, Column + 8).End(xlUp).Row
+        
+ ' Set the cell colors using the Excel ColorIndex values
+ 
+            For j = 2 To YCLastRow
+            
+            If (Cells(j, Column + 9).Value > 0 Or Cells(j, Column + 9).Value = 0) Then
+            Cells(j, Column + 9).Interior.ColorIndex = 10
+            
+            ElseIf Cells(j, Column + 9).Value < 0 Then
+            
+            Cells(j, Column + 9).Interior.ColorIndex = 3
+            
+            End If
+            
+            Next j
+        
+' Set Greatest % Increase, % Decrease, and Total Volume
+
+        Cells(2, Column + 14).Value = "Greatest % Increase"
+        Cells(3, Column + 14).Value = "Greatest % Decrease"
+        Cells(4, Column + 14).Value = "Greatest Total Volume"
+        Cells(1, Column + 15).Value = "Ticker"
+        Cells(1, Column + 16).Value = "Value"
+        
+' Look through each rows to find the greatest value and its associate ticker
+
+        For Z = 2 To YCLastRow
+        
+        If Cells(Z, Column + 10).Value = Application.WorksheetFunction.Max(WS.Range("K2:K" & YCLastRow)) Then
+        
+        Cells(2, Column + 15).Value = Cells(Z, Column + 8).Value
+        Cells(2, Column + 16).Value = Cells(Z, Column + 10).Value
+        Cells(2, Column + 16).NumberFormat = "0.00%"
+        
+        ElseIf Cells(Z, Column + 10).Value = Application.WorksheetFunction.Min(WS.Range("K2:K" & YCLastRow)) Then
+                
+        Cells(3, Column + 15).Value = Cells(Z, Column + 8).Value
+        Cells(3, Column + 16).Value = Cells(Z, Column + 10).Value
+        Cells(3, Column + 16).NumberFormat = "0.00%"
+                
+        ElseIf Cells(Z, Column + 11).Value = Application.WorksheetFunction.Max(WS.Range("L2:L" & YCLastRow)) Then
+        
+        Cells(4, Column + 15).Value = Cells(Z, Column + 8).Value
+        Cells(4, Column + 16).Value = Cells(Z, Column + 11).Value
+        
+        End If
+        
+        Next Z
+        
+    Next WS
+
+End Sub
+    Sheets("2016").Select
+    Columns("O:O").ColumnWidth = 23
+    Sheets("2015").Select
+    Columns("O:O").ColumnWidth = 21.5
+    Sheets("2014").Select
+    Columns("O:O").ColumnWidth = 18.67
+    Sheets("2016").Select
+    ActiveWorkbook.Save
